@@ -1,0 +1,74 @@
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>INFO 3300 Project 2</title>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://d3js.org/topojson.v3.min.js"></script>
+
+  <style>
+    .county {
+      fill: lightgrey;
+    }
+
+    .outline {
+      stroke: gray;
+      stroke-width: 1px;
+      fill: none;
+    }
+
+    .bigoutline {
+      stroke: black;
+      stroke-width: 1px;
+      fill: none;
+    }
+  </style>
+
+</head>
+
+<body>
+  <div class="container larger">
+    <svg id="choropleth" height="800" width="900" style="margin:20px"></svg>
+  </div>
+
+  <script id="p2">
+
+    const svg = d3.select("svg#choropleth");
+    const width = svg.attr("width");
+    const height = svg.attr("height");
+    const margin = { top: 10, right: 10, bottom: 10, left: 10 };
+    const mapWidth = width - margin.left - margin.right;
+    const mapHeight = height - margin.top - margin.bottom;
+    const map = svg.append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    const requestData = async function () {
+
+
+      const us = await d3.json("topojson-states-counties.json");
+
+      var counties = topojson.feature(us, us.objects.counties);
+      var countiesMesh = topojson.mesh(us, us.objects.counties);
+      var stateMesh = topojson.mesh(us, us.objects.states)
+      var projection = d3.geoAlbersUsa().fitSize([mapWidth, mapHeight], counties);
+      var path = d3.geoPath().projection(projection);
+
+      map.selectAll("path.counties").data(counties.features)
+        .join("path")
+        .attr("class", "county")
+        .attr("d", path);
+
+      map.append("path").datum(countiesMesh)
+        .attr("class", "outline")
+        .attr("d", path);
+
+      map.append("path").datum(stateMesh)
+        .attr("class", "bigoutline")
+        .attr("d", path);
+    }
+    requestData();
+  </script>
+</body>
+
+</html>
