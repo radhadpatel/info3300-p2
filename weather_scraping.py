@@ -29,17 +29,9 @@ for state in table:
         if i % 4 == 0:
             data.append(cols[i: i+4])
 
-# table = soup.find_next("table", {"class": "articletable"})
-# rows = table.find_all("tr")
-# for row in rows[1:]:
-#     # Find all data entries
-#     cols = row.find_all("td")
-#     # Remove whitespace from data entries
-#     cols = [i.text.strip() for i in cols]
-#     # Add data element to data table
-#     data.append([i for i in cols if i])
-
 df = pd.DataFrame(data, columns=["State", "AvgF", "AvgC", "Rank"])
+idNums = list(range(1, 51))
+df.insert(0, "ID", idNums)
 df.to_csv("weather.csv")
 
 
