@@ -33,6 +33,7 @@ df = pd.DataFrame(data, columns=["State", "AvgF", "AvgC", "Rank"])
 idNums = list(range(1, 51))
 df.insert(0, "ID", idNums)
 df.to_csv("weather.csv")
+df.to_json("weather.json", "index")
 
 
 # doc = lh.fromstring(page.content)

@@ -25,7 +25,7 @@
     }
 
     body {
-      font-family:'Courier New', Courier, monospace;
+      font-family: 'Courier New', Courier, monospace;
     }
 
     .float-container {
@@ -38,7 +38,7 @@
     .float-child-left {
       float: left;
       padding: 20px;
-    }  
+    }
 
     .float-child-right {
       float: right;
@@ -47,7 +47,7 @@
       margin-right: 400px;
       margin-top: 10;
       margin-bottom: 30;
-    } 
+    }
 
     .slidecontainer {
       width: 800;
@@ -58,10 +58,10 @@
       -webkit-appearance: none;
       width: 800;
       height: 15px;
-      border-radius: 5px;  
+      border-radius: 5px;
       background: #e7ceff;
       outline: none;
-      opacity: 0.7;  
+      opacity: 0.7;
     }
 
     .slider::-webkit-slider-thumb {
@@ -69,7 +69,7 @@
       appearance: none;
       width: 25px;
       height: 25px;
-      border-radius: 50%; 
+      border-radius: 50%;
       background: #9340ff;
       cursor: pointer;
     }
@@ -83,13 +83,13 @@
     }
 
     .info {
-      font-weight: bolder; 
+      font-weight: bolder;
     }
 
     .title {
       font-size: large;
     }
-    
+
     #visTitle {
       font-size: 25;
       font-weight: bolder;
@@ -98,7 +98,7 @@
     }
 
     .note {
-      font-size: 14; 
+      font-size: 14;
       font-weight: lighter;
     }
   </style>
@@ -117,24 +117,24 @@
   </div>
   <div class="float-container">
     <div class="float-child-left"><svg id="barchart" height="600" width="800" style="margin:30px"></svg></div>
-  
+
     <div class="float-child-right">
       <p class="info title">
-      <text>Wine Information Display</text> <br>
-      <text class="note">(hover the circle to see the information)</text> <br>
+        <text>Wine Information Display</text> <br>
+        <text class="note">(hover the circle to see the information)</text> <br>
       </p>
       <p class="info">Wine Title:</p>
       <text id="title" x="50" y="5" text-anchor="start" alignment-baseline="hanging"></text><br>
-  
+
       <p class="info">Variety:</p>
       <text id="variety" x="50" y="5" text-anchor="start" alignment-baseline="hanging"></text> <br>
-  
+
       <p class="info">Winery:</p>
       <text id="wineryName" x="50" y="5" text-anchor="start" alignment-baseline="hanging"></text> <br>
-  
+
       <p class="info">Wine Quality:</p>
       <text id="quality" x="50" y="5" text-anchor="start" alignment-baseline="hanging"></text> <br>
-  
+
       <p class="info">Region:</p>
       <text id="region" x="50" y="5" text-anchor="start" alignment-baseline="hanging"></text> <br>
     </div>
@@ -161,107 +161,107 @@
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     const requestData = async function () {
-        const us = await d3.json("state.json");
-        console.log(us)
+      const us = await d3.json("combined_data.json");
+      console.log(us)
 
-        var states = topojson.feature(us, us.objects.states);     
-        var statesMesh = topojson.mesh(us, us.objects.states);    
-        var projection = d3.geoAlbersUsa().fitSize([mapWidth, mapHeight], states);
-        var path = d3.geoPath().projection(projection);
+      var states = topojson.feature(us, us.objects.states);
+      var statesMesh = topojson.mesh(us, us.objects.states);
+      var projection = d3.geoAlbersUsa().fitSize([mapWidth, mapHeight], states);
+      var path = d3.geoPath().projection(projection);
 
-        map.selectAll("path.state").data(states.features)
-          .join("path")
-          .attr("class", "state")
-          .attr("d", path)
-          // .on('mouseover', mouseEntersPlot)
-          // .on('mouseout', mouseLeavesPlot );
-  
-        map.append("path").datum(statesMesh)
-          .attr("class", "outline")
-          .style("stroke", "black")
-          .style("stroke-width", 0.5)
-          .attr("d", path);
+      map.selectAll("path.state").data(states.features)
+        .join("path")
+        .attr("class", "state")
+        .attr("d", path)
+      // .on('mouseover', mouseEntersPlot)
+      // .on('mouseout', mouseLeavesPlot );
 
-        var weather = await d3.csv("weather.csv", d3.autotype);
-        console.log(weather);
+      map.append("path").datum(statesMesh)
+        .attr("class", "outline")
+        .style("stroke", "black")
+        .style("stroke-width", 0.5)
+        .attr("d", path);
 
-        let stateTemp = {}; 
-        let stateNames = {}; 
+      var weather = await d3.csv("weather.csv", d3.autotype);
+      console.log(weather);
 
-        weather.forEach( d => {
-          stateTemp[ d.ID ] = d.AvgF;
-          stateNames[ d.ID ] = d.State;
-        });
-        
-        const tempExtend = d3.extent(weather, d => d['AvgF']);
-        console.log(tempExtend);
-        const tempColorScale = d3.scaleLinear() // not sure if we should use linear scale
-                         .domain(tempExtend)
-                         .range(["#EC4626","#FADA5D","#C7FDEA","#8CD4FB"]);
-        
-        map.selectAll(".state").data(weather)
-           .style("fill", d => tempColorScale(d.AvgF));
+      let stateTemp = {};
+      let stateNames = {};
 
-      
-        // hover and show information
+      weather.forEach(d => {
+        stateTemp[d.ID] = d.AvgF;
+        stateNames[d.ID] = d.State;
+      });
 
-        let tooltipWidth = 1000;
-        let tooltipHeight = 40;
-        let momesh = map.append("path")
-                        .attr("class","mouseover outline")
-                        .attr("d", "");
-        let tooltip = map.append("g")
-                        .attr("class","tooltip")
-                        .attr("visibility","hidden");
-        tooltip.append("rect")
-              .attr("fill", "black")
-              .attr("opacity", 0.9)
-              .attr("x", -tooltipWidth / 2.0)
-              .attr("y", 0)
-              .attr("width",tooltipWidth)
-              .attr("height",tooltipHeight)
-        let txt = tooltip.append("text")
-                        .attr("fill", "white")
-                        .attr("text-anchor","middle")
-                        .attr("alignment-baseline","hanging")
-                        .attr("x", 250)
-                        .attr("y", 2);
-        let txt2 = tooltip.append("text")
-                        .attr("fill", "white")
-                        .attr("text-anchor","middle")
-                        .attr("alignment-baseline","hanging")
-                        .attr("x", 250)
-                        .attr("y", 22);
-        
-        d3.selectAll(".state").on("mouseenter", mouseEntersPlot);
-        d3.selectAll(".state").on("mouseout",  mouseLeavesPlot);
-        
+      const tempExtend = d3.extent(weather, d => d['AvgF']);
+      console.log(tempExtend);
+      const tempColorScale = d3.scaleLinear() // not sure if we should use linear scale
+        .domain(tempExtend)
+        .range(["#EC4626", "#FADA5D", "#C7FDEA", "#8CD4FB"]);
 
-        function mouseEntersPlot() {
-          tooltip.style("visibility","visible")
-          let state = d3.select(this);
+      map.selectAll(".state").data(weather)
+        .style("fill", d => tempColorScale(d.AvgF));
 
-          let stateID = state.datum().ID;
-          console.log(stateID);
 
-          txt.text(stateNames[stateID]);
-          txt2.text("Averaged temperature(F): " + stateTemp[stateID]);
+      // hover and show information
 
-          let bounds = path.bounds( state.datum() );   
-          let xPos = (bounds[0][0]+bounds[1][0])/2.0;
-          let yPos = bounds[1][1] - 15;
-          tooltip.attr("transform",`translate(${xPos},${yPos})`);
-      
-          var mo = topojson.mesh(us, us.objects.states, function(a, b) { return a.ID === stateID || b.ID === stateID; });
-          momesh.datum(mo).attr("d", path);
-          
-        }
+      let tooltipWidth = 1000;
+      let tooltipHeight = 40;
+      let momesh = map.append("path")
+        .attr("class", "mouseover outline")
+        .attr("d", "");
+      let tooltip = map.append("g")
+        .attr("class", "tooltip")
+        .attr("visibility", "hidden");
+      tooltip.append("rect")
+        .attr("fill", "black")
+        .attr("opacity", 0.9)
+        .attr("x", -tooltipWidth / 2.0)
+        .attr("y", 0)
+        .attr("width", tooltipWidth)
+        .attr("height", tooltipHeight)
+      let txt = tooltip.append("text")
+        .attr("fill", "white")
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "hanging")
+        .attr("x", 250)
+        .attr("y", 2);
+      let txt2 = tooltip.append("text")
+        .attr("fill", "white")
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "hanging")
+        .attr("x", 250)
+        .attr("y", 22);
 
-        function mouseLeavesPlot() {
-          tooltip.style("visibility", "hidden");
-          let state = d3.select(this);
-          momesh.attr("d", "");
-        }
+      d3.selectAll(".state").on("mouseenter", mouseEntersPlot);
+      d3.selectAll(".state").on("mouseout", mouseLeavesPlot);
+
+
+      function mouseEntersPlot() {
+        tooltip.style("visibility", "visible")
+        let state = d3.select(this);
+
+        let stateID = state.datum().ID;
+        console.log(stateID);
+
+        txt.text(stateNames[stateID]);
+        txt2.text("Averaged temperature(F): " + stateTemp[stateID]);
+
+        let bounds = path.bounds(state.datum());
+        let xPos = (bounds[0][0] + bounds[1][0]) / 2.0;
+        let yPos = bounds[1][1] - 15;
+        tooltip.attr("transform", `translate(${xPos},${yPos})`);
+
+        var mo = topojson.mesh(us, us.objects.states, function (a, b) { return a.ID === stateID || b.ID === stateID; });
+        momesh.datum(mo).attr("d", path);
+
+      }
+
+      function mouseLeavesPlot() {
+        tooltip.style("visibility", "hidden");
+        let state = d3.select(this);
+        momesh.attr("d", "");
+      }
 
 
       // ---------------------- Part 2 -----------------------------------------
@@ -335,7 +335,7 @@
       wines.forEach((d, i) => {
         let circle = chartArea.append("circle")
           .attr("cx", stateScale(d['province']) + jitter())
-          .attr("cy", qualityScale(d['points']) + jitter()-70)
+          .attr("cy", qualityScale(d['points']) + jitter() - 70)
           .attr("r", 6)
           .attr("label", d['variety'])
           .attr("opacity", 0.4)
@@ -421,4 +421,5 @@
     requestData();
   </script>
 </body>
+
 </html>
