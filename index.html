@@ -189,9 +189,12 @@
       let stateNames = {};
 
       weather.forEach(d => {
-        stateTemp[d.id] = d.AvgF;
-        stateNames[d.id] = d.State;
+        console.log(d);
+        stateTemp[d.ID] = d.AvgF;
+        stateNames[d.ID] = d.State;
       });
+
+      console.log(stateTemp);
 
       const tempExtend = d3.extent(weather, d => d['AvgF']);
       // console.log(tempExtend);
