@@ -172,7 +172,7 @@
       console.log(states.features);
 
       var weather = await d3.csv("weather.csv", d3.autotype);
-      // console.log(weather);
+      console.log(weather);
 
       let stateTemp = {};
       let stateNames = {};
@@ -184,9 +184,9 @@
       })
 
       const tempExtend = d3.extent(weather, d => d['AvgF']);
-      // console.log(tempExtend);
-      const tempColorScale = d3.scaleLinear() // not sure if we should use linear scale
-        .domain(tempExtend)
+      console.log(tempExtend);
+      const tempColorScale = d3.scaleLinear() 
+        .domain([tempExtend[1], tempExtend[0]])
         .range(["#EC4626", "#FADA5D", "#C7FDEA", "#8CD4FB"]);
 
       states.features.forEach(s => s.properties.avgTmp = stateTemp.hasOwnProperty(s.properties.name) ? stateTemp[s.properties.name] : 0)
@@ -196,9 +196,9 @@
         .attr("class", "state")
         .attr("d", path)
         .attr("fill", d => tempColorScale(d.properties.avgTmp))
-        .attr("stateName", d => d.properties.name);
-      // .on('mouseover', mouseEntersPlot)
-      // .on('mouseout', mouseLeavesPlot );
+        .attr("stateName", d => d.properties.name)
+        .on('mouseover', mouseEntersPlot)
+        .on('mouseout', mouseLeavesPlot );
 
       map.append("path").datum(statesMesh)
         .attr("class", "outline")
@@ -206,28 +206,14 @@
         .style("stroke-width", 0.5)
         .attr("d", path);
 
-
-
-
       const stateSet = new Set(states.features.map(d => d.properties.name))
       const weatherSet = new Set(Object.values(stateNames))
       console.log([...stateSet].filter(s => !weatherSet.has(s)))
-
-
-
       console.log(stateTemp);
 
-
-
-      // map.selectAll(".state").data(weather)
-      //   
-
-
-
       // hover and show information
-
-      let tooltipWidth = 1000;
-      let tooltipHeight = 40;
+      let tooltipWidth = 180;
+      let tooltipHeight = 100;
       let momesh = map.append("path")
         .attr("class", "mouseover outline")
         .attr("d", "");
@@ -245,28 +231,34 @@
         .attr("fill", "white")
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "hanging")
-        .attr("x", 250)
-        .attr("y", 2);
+        .style("font-size", "80%")
+        .attr("x", 0)
+        .attr("y", 12);
       let txt2 = tooltip.append("text")
         .attr("fill", "white")
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "hanging")
+        .style("font-size", "80%")
+        .attr("x", 0)
+        .attr("y", 32);
+      let txt3 = tooltip.append("text")
+        .attr("fill", "white")
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "hanging")
+        .style("font-size", "80%")
         .attr("x", 250)
-        .attr("y", 22);
+        .attr("y", 52);
 
       d3.selectAll(".state").on("mouseenter", mouseEntersPlot);
       d3.selectAll(".state").on("mouseout", mouseLeavesPlot);
-
 
       function mouseEntersPlot() {
         tooltip.style("visibility", "visible")
         let state = d3.select(this);
 
-        // let stateID = state.datum().id;
-        // console.log(stateID);
-
         txt.text(state.attr("stateName"));
-        txt2.text("Averaged temperature(F): " + stateTemp[state.attr("stateName")]);
+        txt2.text("Average Temp(F): " + stateTemp[state.attr("stateName")]);
+        txt3.text();
 
         let bounds = path.bounds(state.datum());
         let xPos = (bounds[0][0] + bounds[1][0]) / 2.0;
@@ -275,7 +267,6 @@
 
         var mo = topojson.mesh(us, us.objects.states, function (a, b) { return a.id === state.attr("stateName") || b.id === state.attr("stateName"); });
         momesh.datum(mo).attr("d", path);
-
       }
 
       function mouseLeavesPlot() {
@@ -299,7 +290,7 @@
         .attr("transform", `translate(${margin2.left + 25},${margin2.top})`);
 
       const data = await d3.csv("wines_cleaned.csv");
-      // console.log(data)
+      console.log(data)
 
 
       // clean data
@@ -309,6 +300,9 @@
       });
       var states = ["California", "Washington", "Oregon", "New York", "Virginia"];
       var wines = data.filter(function (d) { return (d.price != 0 && states.includes(d.province)) });
+
+      // part 1: quanlity
+      
 
 
       // y scale
