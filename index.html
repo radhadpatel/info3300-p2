@@ -164,23 +164,12 @@
       const us = await d3.json("states-10m.json");
       console.log(us)
 
+
       var states = topojson.feature(us, us.objects.states);
       var statesMesh = topojson.mesh(us, us.objects.states);
       var projection = d3.geoAlbersUsa().fitSize([mapWidth, mapHeight], states);
       var path = d3.geoPath().projection(projection);
       console.log(states.features);
-      map.selectAll("path.state").data(states.features)
-        .join("path")
-        .attr("class", "state")
-        .attr("d", path)
-      // .on('mouseover', mouseEntersPlot)
-      // .on('mouseout', mouseLeavesPlot );
-
-      map.append("path").datum(statesMesh)
-        .attr("class", "outline")
-        .style("stroke", "black")
-        .style("stroke-width", 0.5)
-        .attr("d", path);
 
       var weather = await d3.csv("weather.csv", d3.autotype);
       // console.log(weather);
@@ -190,11 +179,9 @@
 
       weather.forEach(d => {
         console.log(d);
-        stateTemp[d.ID] = d.AvgF;
-        stateNames[d.ID] = d.State;
-      });
-
-      console.log(stateTemp);
+        stateTemp[d.State] = d.AvgF;
+        stateNames[d.id] = d.State;
+      })
 
       const tempExtend = d3.extent(weather, d => d['AvgF']);
       // console.log(tempExtend);
@@ -202,8 +189,39 @@
         .domain(tempExtend)
         .range(["#EC4626", "#FADA5D", "#C7FDEA", "#8CD4FB"]);
 
-      map.selectAll(".state").data(weather)
-        .style("fill", d => tempColorScale(d.AvgF));
+      states.features.forEach(s => s.properties.avgTmp = stateTemp.hasOwnProperty(s.properties.name) ? stateTemp[s.properties.name] : 0)
+
+      map.selectAll("path.state").data(states.features)
+        .join("path")
+        .attr("class", "state")
+        .attr("d", path)
+        .attr("fill", d => tempColorScale(d.properties.avgTmp))
+        .attr("stateName", d => d.properties.name);
+      // .on('mouseover', mouseEntersPlot)
+      // .on('mouseout', mouseLeavesPlot );
+
+      map.append("path").datum(statesMesh)
+        .attr("class", "outline")
+        .style("stroke", "black")
+        .style("stroke-width", 0.5)
+        .attr("d", path);
+
+
+
+
+      const stateSet = new Set(states.features.map(d => d.properties.name))
+      const weatherSet = new Set(Object.values(stateNames))
+      console.log([...stateSet].filter(s => !weatherSet.has(s)))
+
+
+
+      console.log(stateTemp);
+
+
+
+      // map.selectAll(".state").data(weather)
+      //   
+
 
 
       // hover and show information
@@ -244,18 +262,18 @@
         tooltip.style("visibility", "visible")
         let state = d3.select(this);
 
-        let stateID = state.datum().id;
+        // let stateID = state.datum().id;
         // console.log(stateID);
 
-        txt.text(stateNames[stateID]);
-        txt2.text("Averaged temperature(F): " + stateTemp[stateID]);
+        txt.text(state.attr("stateName"));
+        txt2.text("Averaged temperature(F): " + stateTemp[state.attr("stateName")]);
 
         let bounds = path.bounds(state.datum());
         let xPos = (bounds[0][0] + bounds[1][0]) / 2.0;
         let yPos = bounds[1][1] - 15;
         tooltip.attr("transform", `translate(${xPos},${yPos})`);
 
-        var mo = topojson.mesh(us, us.objects.states, function (a, b) { return a.id === stateID || b.id === stateID; });
+        var mo = topojson.mesh(us, us.objects.states, function (a, b) { return a.id === state.attr("stateName") || b.id === state.attr("stateName"); });
         momesh.datum(mo).attr("d", path);
 
       }
