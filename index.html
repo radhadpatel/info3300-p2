@@ -161,28 +161,107 @@
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     const requestData = async function () {
+        const us = await d3.json("state.json");
+        console.log(us)
 
+        var states = topojson.feature(us, us.objects.states);     
+        var statesMesh = topojson.mesh(us, us.objects.states);    
+        var projection = d3.geoAlbersUsa().fitSize([mapWidth, mapHeight], states);
+        var path = d3.geoPath().projection(projection);
 
-      const us = await d3.json("topojson-states-counties.json");
+        map.selectAll("path.state").data(states.features)
+          .join("path")
+          .attr("class", "state")
+          .attr("d", path)
+          // .on('mouseover', mouseEntersPlot)
+          // .on('mouseout', mouseLeavesPlot );
+  
+        map.append("path").datum(statesMesh)
+          .attr("class", "outline")
+          .style("stroke", "black")
+          .style("stroke-width", 0.5)
+          .attr("d", path);
 
-      var counties = topojson.feature(us, us.objects.counties);
-      var countiesMesh = topojson.mesh(us, us.objects.counties);
-      var stateMesh = topojson.mesh(us, us.objects.states)
-      var projection = d3.geoAlbersUsa().fitSize([mapWidth, mapHeight], counties);
-      var path = d3.geoPath().projection(projection);
+        var weather = await d3.csv("weather.csv", d3.autotype);
+        console.log(weather);
 
-      map.selectAll("path.counties").data(counties.features)
-        .join("path")
-        .attr("class", "county")
-        .attr("d", path);
+        let stateTemp = {}; 
+        let stateNames = {}; 
 
-      map.append("path").datum(countiesMesh)
-        .attr("class", "outline")
-        .attr("d", path);
+        weather.forEach( d => {
+          stateTemp[ d.ID ] = d.AvgF;
+          stateNames[ d.ID ] = d.State;
+        });
+        
+        const tempExtend = d3.extent(weather, d => d['AvgF']);
+        console.log(tempExtend);
+        const tempColorScale = d3.scaleLinear() // not sure if we should use linear scale
+                         .domain(tempExtend)
+                         .range(["#EC4626","#FADA5D","#C7FDEA","#8CD4FB"]);
+        
+        map.selectAll(".state").data(weather)
+           .style("fill", d => tempColorScale(d.AvgF));
 
-      map.append("path").datum(stateMesh)
-        .attr("class", "bigoutline")
-        .attr("d", path);
+      
+        // hover and show information
+
+        let tooltipWidth = 1000;
+        let tooltipHeight = 40;
+        let momesh = map.append("path")
+                        .attr("class","mouseover outline")
+                        .attr("d", "");
+        let tooltip = map.append("g")
+                        .attr("class","tooltip")
+                        .attr("visibility","hidden");
+        tooltip.append("rect")
+              .attr("fill", "black")
+              .attr("opacity", 0.9)
+              .attr("x", -tooltipWidth / 2.0)
+              .attr("y", 0)
+              .attr("width",tooltipWidth)
+              .attr("height",tooltipHeight)
+        let txt = tooltip.append("text")
+                        .attr("fill", "white")
+                        .attr("text-anchor","middle")
+                        .attr("alignment-baseline","hanging")
+                        .attr("x", 250)
+                        .attr("y", 2);
+        let txt2 = tooltip.append("text")
+                        .attr("fill", "white")
+                        .attr("text-anchor","middle")
+                        .attr("alignment-baseline","hanging")
+                        .attr("x", 250)
+                        .attr("y", 22);
+        
+        d3.selectAll(".state").on("mouseenter", mouseEntersPlot);
+        d3.selectAll(".state").on("mouseout",  mouseLeavesPlot);
+        
+
+        function mouseEntersPlot() {
+          tooltip.style("visibility","visible")
+          let state = d3.select(this);
+
+          let stateID = state.datum().ID;
+          console.log(stateID);
+
+          txt.text(stateNames[stateID]);
+          txt2.text("Averaged temperature(F): " + stateTemp[stateID]);
+
+          let bounds = path.bounds( state.datum() );   
+          let xPos = (bounds[0][0]+bounds[1][0])/2.0;
+          let yPos = bounds[1][1] - 15;
+          tooltip.attr("transform",`translate(${xPos},${yPos})`);
+      
+          var mo = topojson.mesh(us, us.objects.states, function(a, b) { return a.ID === stateID || b.ID === stateID; });
+          momesh.datum(mo).attr("d", path);
+          
+        }
+
+        function mouseLeavesPlot() {
+          tooltip.style("visibility", "hidden");
+          let state = d3.select(this);
+          momesh.attr("d", "");
+        }
 
 
       // ---------------------- Part 2 -----------------------------------------
