@@ -161,14 +161,14 @@
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     const requestData = async function () {
-      const us = await d3.json("combined_data.json");
+      const us = await d3.json("states-10m.json");
       console.log(us)
 
       var states = topojson.feature(us, us.objects.states);
       var statesMesh = topojson.mesh(us, us.objects.states);
       var projection = d3.geoAlbersUsa().fitSize([mapWidth, mapHeight], states);
       var path = d3.geoPath().projection(projection);
-
+      console.log(states.features);
       map.selectAll("path.state").data(states.features)
         .join("path")
         .attr("class", "state")
@@ -183,18 +183,18 @@
         .attr("d", path);
 
       var weather = await d3.csv("weather.csv", d3.autotype);
-      console.log(weather);
+      // console.log(weather);
 
       let stateTemp = {};
       let stateNames = {};
 
       weather.forEach(d => {
-        stateTemp[d.ID] = d.AvgF;
-        stateNames[d.ID] = d.State;
+        stateTemp[d.id] = d.AvgF;
+        stateNames[d.id] = d.State;
       });
 
       const tempExtend = d3.extent(weather, d => d['AvgF']);
-      console.log(tempExtend);
+      // console.log(tempExtend);
       const tempColorScale = d3.scaleLinear() // not sure if we should use linear scale
         .domain(tempExtend)
         .range(["#EC4626", "#FADA5D", "#C7FDEA", "#8CD4FB"]);
@@ -241,8 +241,8 @@
         tooltip.style("visibility", "visible")
         let state = d3.select(this);
 
-        let stateID = state.datum().ID;
-        console.log(stateID);
+        let stateID = state.datum().id;
+        // console.log(stateID);
 
         txt.text(stateNames[stateID]);
         txt2.text("Averaged temperature(F): " + stateTemp[stateID]);
@@ -252,7 +252,7 @@
         let yPos = bounds[1][1] - 15;
         tooltip.attr("transform", `translate(${xPos},${yPos})`);
 
-        var mo = topojson.mesh(us, us.objects.states, function (a, b) { return a.ID === stateID || b.ID === stateID; });
+        var mo = topojson.mesh(us, us.objects.states, function (a, b) { return a.id === stateID || b.id === stateID; });
         momesh.datum(mo).attr("d", path);
 
       }
@@ -273,12 +273,12 @@
       const chartHeight = height2 - margin2.top - margin2.bottom;
 
       let annotations = svg2.append("g").attr("id", "annotations");
-      console.log(annotations)
+      // console.log(annotations)
       let chartArea = svg2.append("g").attr("id", "points")
         .attr("transform", `translate(${margin2.left + 25},${margin2.top})`);
 
       const data = await d3.csv("wines_cleaned.csv");
-      console.log(data)
+      // console.log(data)
 
 
       // clean data
