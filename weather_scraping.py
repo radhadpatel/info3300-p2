@@ -30,8 +30,14 @@ for state in table:
             data.append(cols[i: i+4])
 
 df = pd.DataFrame(data, columns=["State", "AvgF", "AvgC", "Rank"])
-idNums = list(range(1, 51))
-df.insert(0, "ID", idNums)
+# idNums = list(range(1, 51))
+idNums = []
+for i in range(1, 51):
+    if i < 10:
+        idNums.append("0" + str(i))
+    else:
+        idNums.append(str(i))
+df.insert(0, "id", idNums)
 df.to_csv("weather.csv")
 df.to_json("weather.json", "index")
 
