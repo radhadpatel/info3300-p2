@@ -99,11 +99,19 @@
       font-size: large;
     }
 
+    .subtitle {
+      font-weight: bolder;
+    }
+
     #visTitle {
       font-size: 25;
       font-weight: bolder;
       margin-left: 100;
       margin-top: 50;
+    }
+
+    #visScript {
+      margin-left: 100;
     }
 
     .note {
@@ -124,13 +132,17 @@
 <body>
   <!-- Map -->
   <div>
-    <p id="visTitle"> The Relationship Between Wine Quality And State Average Temperature</p>
+    <p>
+      <text id="visTitle"> The Relationship Between Wine Quality And State Average Temperature</text>
+      <br><text id="visScript">(Please hover over the state to see information)</text>
+    </p>
+    
   </div>
 
   <div class="float-container">
     <div class="float-child-left1">
-      <svg id="choropleth" height="550" width="800"></svg>
-      <svg id="colorLegend" height="100" width="400" style="background: #fff; margin-top:30px"></svg>
+      <svg id="choropleth" height="550" width="800" style= "margin-left:100px"></svg>
+      <svg id="colorLegend" height="100" width="400" style="background: #fff; margin-left:100px"></svg>
     </div>
 
     <div class="float-child-right1">
@@ -139,23 +151,15 @@
         <text class="note">(hover over the state to view the list)</text> <br>
       </p>
       <!-- x=760, y=140 -->
-      <text id="wine1" x="0" y="40" text-anchor="start" alignment-baseline="hanging"></text><br>
+      <text id="wine1" x="0" y="50" text-anchor="start" alignment-baseline="hanging"></text><br>
       <br>
-      <text id="wine2" x="0" y="60" text-anchor="start" alignment-baseline="hanging"></text> <br>
+      <text id="wine2" x="0" y="80" text-anchor="start" alignment-baseline="hanging"></text> <br>
       <br>
-      <text id="wine3" x="0" y="80" text-anchor="start" alignment-baseline="hanging"></text> <br>
+      <text id="wine3" x="0" y="110" text-anchor="start" alignment-baseline="hanging"></text> <br>
       <br>
-      <text id="wine4" x="0" y="100" text-anchor="start" alignment-baseline="hanging"></text> <br>
+      <text id="wine4" x="0" y="140" text-anchor="start" alignment-baseline="hanging"></text> <br>
       <br>
-      <text id="wine5" x="0" y="120" text-anchor="start" alignment-baseline="hanging"></text> <br>
-      <!-- <p class="list content"> -->
-      <!-- <ul id="wine1" x="50" y="5" text-anchor="start" alignment-baseline="hanging"></ul><br> -->
-      <!-- <ul id="wine2" x="50" y="5" text-anchor="start" alignment-baseline="hanging"></text><br>
-        <text id="wine3" x="50" y="5" text-anchor="start" alignment-baseline="hanging"></text><br>
-        <text id="wine4" x="50" y="5" text-anchor="start" alignment-baseline="hanging"></text><br>
-        <text id="wine5" x="50" y="5" text-anchor="start" alignment-baseline="hanging"></text><br> -->
-      <!-- </p> -->
-
+      <text id="wine5" x="0" y="170" text-anchor="start" alignment-baseline="hanging"></text> <br>
     </div>
   </div>
 
@@ -202,7 +206,7 @@
     const svg = d3.select("svg#choropleth");
     const width = svg.attr("width");
     const height = svg.attr("height");
-    const margin = { top: 10, right: 80, bottom: 10, left: 10 };
+    const margin = { top: 10, right: 100, bottom: 10, left: 10 };
     const mapWidth = width - margin.left - margin.right;
     const mapHeight = height - margin.top - margin.bottom;
     const map = svg.append("g")
@@ -258,6 +262,8 @@
         .domain(tempExtend)
         .range(["#37ABF8", "#A3EDFC", "#F2D946", "#F09135", "#E94125"]);
       console.log(tempColorScale.quantiles())
+
+      
       function drawLegend(legend, legendColorScale) {
 
         const legendWidth = legend.attr("width");
@@ -429,7 +435,7 @@
 
       // hover and show information
       let tooltipWidth = 200;
-      let tooltipHeight = 80;
+      let tooltipHeight = 90;
       let momesh = map.append("path")
         .attr("class", "mouseover outline")
         .attr("d", "");
@@ -445,6 +451,7 @@
         .attr("height", tooltipHeight)
       let txt = tooltip.append("text")
         .attr("fill", "white")
+        .attr("class", "subtitle")
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "hanging")
         .style("font-size", "60%")
@@ -464,6 +471,13 @@
         .style("font-size", "60%")
         .attr("x", 0)
         .attr("y", 52);
+      let txt4 = tooltip.append("text")
+        .attr("fill", "white")
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "hanging")
+        .style("font-size", "60%")
+        .attr("x", 0)
+        .attr("y", 72);
 
 
 
@@ -531,9 +545,10 @@
         tooltip.style("visibility", "visible");
         let state = d3.select(this);
 
-        txt.text(state.attr("stateName"));
-        txt2.text("Average Temp(F): " + stateTemp[state.attr("stateName")]);
-        txt3.text("Count(quality score > 80): " + count[state.attr("stateName")]);
+        txt.text("General Info of the State")
+        txt2.text(state.attr("stateName"));
+        txt3.text("Average Temp(F): " + stateTemp[state.attr("stateName")]);
+        txt4.text("Count(quality score > 80): " + count[state.attr("stateName")]);
 
         let bounds = path.bounds(state.datum());
         let xPos = (bounds[0][0] + bounds[1][0]) / 2.0;
