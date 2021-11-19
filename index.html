@@ -53,9 +53,9 @@
       float: right;
       padding: 40px;
       border: 2px solid #f1e6ff;
-      margin-right: 200px;
+      margin-right: 100px;
       margin-top: 10;
-      margin-bottom: 200;
+      margin-bottom: 100;
     }
 
     .slidecontainer {
@@ -114,6 +114,10 @@
       margin-left: 100;
     }
 
+    #legendLabel {
+      margin-left: 120;
+    }
+
     .note {
       font-size: 14;
       font-weight: lighter;
@@ -134,7 +138,13 @@
   <div>
     <p>
       <text id="visTitle"> The Relationship Between Wine Quality And State Average Temperature</text>
-      <br><text id="visScript">(Please hover over the state to see information)</text>
+      <br><text id="visScript">Is there a correlation between average state temperature and the quality of
+        the wines produced there? <br></text>
+      <text id="visScript">Hover over a state to find out more information
+        about each of these attributes. <br> </text>
+      <text id="visScript"> You can also get a list of the top 5 wines
+        in that state so you can try them out!
+      </text>
     </p>
 
   </div>
@@ -142,6 +152,7 @@
   <div class="float-container">
     <div class="float-child-left1">
       <svg id="choropleth" height="550" width="800" style="margin-left:100px"></svg>
+      <p id="legendLabel">Temperature in Fahrenheit</p>
       <svg id="colorLegend" height="100" width="400" style="background: #fff; margin-left:100px"></svg>
     </div>
 
@@ -165,7 +176,19 @@
 
   <!-- Scatterplot -->
   <div>
-    <p id="visTitle">Wines Quality in The Top 5 Wine-Producing States</p>
+    <p>
+      <text id="visTitle">Wines Quality in The Top 5 Wine-Producing States </text>
+      <br>
+      <text id="visScript"> How highly ranked are the wines in the top 5 wine-producing states?
+        Do more expensive wines come from a specific state? <br> </text>
+      <text id="visScript">Use the slider to select
+        a price and find out more about the quality of wines and the states they come
+        from. <br> </text>
+      <text id="visScript">Hovering over each individual point will also give you more information
+        about the wine if you ever want to buy a bottle. <br>
+      </text>
+    </p>
+
   </div>
   <div class="float-container">
     <div class="float-child-left"><svg id="barchart" height="600" width="800" style="margin:30px"></svg></div>
@@ -288,7 +311,60 @@
             .attr("width", stepSize)
             .attr("height", barHeight)
             .style("fill", legendColorScale(pixelScale(i)));
+          bar.append("rect")
+            .attr("x", i)
+            .attr("y", 4 * barHeight / 5)
+            .attr("width", stepSize)
+            .attr("height", barHeight / 5)
+            .style("fill", function (d) {
+              hsl = d3.hsl(legendColorScale(pixelScale(i)));
+              h = hsl.h;
+              s = hsl.s;
+              l = hsl.l * 0.3;
+              console.log(d3.hsl(h, s, l, 1));
+              return d3.hsl(h, s, l, 1);
+            });
+          bar.append("rect")
+            .attr("x", i)
+            .attr("y", 3 * barHeight / 5)
+            .attr("width", stepSize)
+            .attr("height", barHeight / 5)
+            .style("fill", function (d) {
+              hsl = d3.hsl(legendColorScale(pixelScale(i)));
+              h = hsl.h;
+              s = hsl.s;
+              l = hsl.l * 0.4;
+              console.log(d3.hsl(h, s, l, 1));
+              return d3.hsl(h, s, l, 1);
+            });
+          bar.append("rect")
+            .attr("x", i)
+            .attr("y", 2 * barHeight / 5)
+            .attr("width", stepSize)
+            .attr("height", barHeight / 5)
+            .style("fill", function (d) {
+              hsl = d3.hsl(legendColorScale(pixelScale(i)));
+              h = hsl.h;
+              s = hsl.s;
+              l = hsl.l * 0.6;
+              console.log(d3.hsl(h, s, l, 1));
+              return d3.hsl(h, s, l, 1);
+            });
+          bar.append("rect")
+            .attr("x", i)
+            .attr("y", barHeight / 5)
+            .attr("width", stepSize)
+            .attr("height", barHeight / 5)
+            .style("fill", function (d) {
+              hsl = d3.hsl(legendColorScale(pixelScale(i)));
+              h = hsl.h;
+              s = hsl.s;
+              l = hsl.l * 0.8;
+              console.log(d3.hsl(h, s, l, 1));
+              return d3.hsl(h, s, l, 1);
+            });
         }
+        legend.append("text").attr("x", 0).attr("y", legendWidth).text("High # Quality Scores")
         bar.append("line").attr("stroke", "white").attr("stroke-width", 3).attr("x1", barScale(legendMinMax[0])).attr("x2", barScale(legendMinMax[0])).attr("y1", 0).attr("y1", barHeight + 4);
         bar.append("line").attr("stroke", "white").attr("stroke-width", 3).attr("x1", barScale(legendMinMax[1])).attr("x2", barScale(legendMinMax[1])).attr("y1", 0).attr("y1", barHeight + 4);
       }
@@ -377,7 +453,7 @@
       let chartArea = svg2.append("g").attr("id", "points")
         .attr("transform", `translate(${margin2.left + 25},${margin2.top})`);
 
-      const data = await d3.csv("wines_cleaned.csv");
+      const data = await d3.csv("filtered_wines.csv");
       // console.log(data);
 
 
@@ -412,8 +488,10 @@
       // console.log(quanlityCount);
 
       let count = {};
+      let total = 0;
       quanlityCount.forEach(d => {
         count[d.state] = d.count
+        total += d.count
       })
       // console.log(count);
 
@@ -421,7 +499,19 @@
         .join("path")
         .attr("class", "state")
         .attr("d", path)
-        .attr("fill", d => count[d.properties.name] !== 0 ? d3.hsl(tempColorScale(d.properties.avgTmp)) : 'lightgrey')
+        .attr("fill", function (d) {
+          hsl = d3.hsl(tempColorScale(d.properties.avgTmp));
+          h = hsl.h;
+          s = hsl.s;
+          l = hsl.l * (1 + (-count[d.properties.name] / (total - 100)));
+          console.log(d3.hsl(h, s, l, 1));
+          if (count[d.properties.name] !== 0) {
+            return d3.hsl(h, s, l, 1);
+          }
+          else {
+            return 'lightgrey';
+          }
+        })
         .attr("stateName", d => d.properties.name)
         .on('mouseover', mouseEntersPlot)
         .on('mouseout', mouseLeavesPlot);
@@ -623,7 +713,13 @@
       }
 
       function mouseLeavesPlot() {
-        textbox.html("");
+        // textbox.html("");
+        d3.select('#wine1').text("");
+        d3.select('#wine2').text("");
+        d3.select('#wine3').text("");
+        d3.select('#wine4').text("");
+        d3.select('#wine5').text("");
+
         tooltip.style("visibility", "hidden");
         let state = d3.select(this);
         momesh.attr("d", "");
