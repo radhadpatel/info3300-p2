@@ -53,9 +53,9 @@
       float: right;
       padding: 40px;
       border: 2px solid #f1e6ff;
-      margin-right: 200px;
+      margin-right: 100px;
       margin-top: 10;
-      margin-bottom: 200;
+      margin-bottom: 100;
     }
 
     .slidecontainer {
@@ -136,12 +136,12 @@
       <text id="visTitle"> The Relationship Between Wine Quality And State Average Temperature</text>
       <br><text id="visScript">(Please hover over the state to see information)</text>
     </p>
-    
+
   </div>
 
   <div class="float-container">
     <div class="float-child-left1">
-      <svg id="choropleth" height="550" width="800" style= "margin-left:100px"></svg>
+      <svg id="choropleth" height="550" width="800" style="margin-left:100px"></svg>
       <svg id="colorLegend" height="100" width="400" style="background: #fff; margin-left:100px"></svg>
     </div>
 
@@ -263,7 +263,7 @@
         .range(["#37ABF8", "#A3EDFC", "#F2D946", "#F09135", "#E94125"]);
       console.log(tempColorScale.quantiles())
 
-      
+
       function drawLegend(legend, legendColorScale) {
 
         const legendWidth = legend.attr("width");
@@ -624,7 +624,13 @@
       }
 
       function mouseLeavesPlot() {
-        textbox.html("");
+        // textbox.html("");
+        d3.select('#wine1').text("");
+        d3.select('#wine2').text("");
+        d3.select('#wine3').text("");
+        d3.select('#wine4').text("");
+        d3.select('#wine5').text("");
+
         tooltip.style("visibility", "hidden");
         let state = d3.select(this);
         momesh.attr("d", "");
