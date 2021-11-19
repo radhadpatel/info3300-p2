@@ -138,14 +138,20 @@
   <div>
     <p>
       <text id="visTitle"> The Relationship Between Wine Quality And State Average Temperature</text>
-      <br><text id="visScript">(Please hover over the state to see information)</text>
+      <br><text id="visScript">Is there a correlation between average state temperature and the quality of
+        the wines produced there? <br></text>
+      <text id="visScript">Hover over a state to find out more information
+        about each of these attributes. <br> </text>
+      <text id="visScript"> You can also get a list of the top 5 wines
+        in that state so you can try them out!
+      </text>
     </p>
 
   </div>
 
   <div class="float-container">
     <div class="float-child-left1">
-      <svg id="choropleth" height="550" width="800" style= "margin-left:100px"></svg>
+      <svg id="choropleth" height="550" width="800" style="margin-left:100px"></svg>
       <p id="legendLabel">Temperature in Fahrenheit</p>
       <svg id="colorLegend" height="100" width="400" style="background: #fff; margin-left:100px"></svg>
     </div>
@@ -170,7 +176,19 @@
 
   <!-- Scatterplot -->
   <div>
-    <p id="visTitle">Wines Quality in The Top 5 Wine-Producing States</p>
+    <p>
+      <text id="visTitle">Wines Quality in The Top 5 Wine-Producing States </text>
+      <br>
+      <text id="visScript"> How highly ranked are the wines in the top 5 wine-producing states?
+        Do more expensive wines come from a specific state? <br> </text>
+      <text id="visScript">Use the slider to select
+        a price and find out more about the quality of wines and the states they come
+        from. <br> </text>
+      <text id="visScript">Hovering over each individual point will also give you more information
+        about the wine if you ever want to buy a bottle. <br>
+      </text>
+    </p>
+
   </div>
   <div class="float-container">
     <div class="float-child-left"><svg id="barchart" height="600" width="800" style="margin:30px"></svg></div>
@@ -383,7 +401,7 @@
       let chartArea = svg2.append("g").attr("id", "points")
         .attr("transform", `translate(${margin2.left + 25},${margin2.top})`);
 
-      const data = await d3.csv("wines_cleaned.csv");
+      const data = await d3.csv("filtered_wines.csv");
       // console.log(data);
 
 
