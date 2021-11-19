@@ -128,7 +128,7 @@
 
   <div class="float-container">
     <div class="float-child-left1">
-      <svg id="choropleth" height="800" width="1000" style="margin:30px"></svg>
+      <svg id="choropleth" height="550" width="1000"></svg>
       <svg id="colorLegend" height="100" width="400" style="background: #fff; margin-top:30px"></svg>
     </div>
 
@@ -241,12 +241,12 @@
       })
 
 
-      const tempExtend = d3.extent(weather, d => d['AvgF']);
+      const tempExtend = weather.map(d => d['AvgF']);
       // console.log(tempExtend);
       const tempColorScale = d3.scaleQuantile()
-        .domain([tempExtend[1], tempExtend[0]])
+        .domain(tempExtend)
         .range(["#37ABF8", "#A3EDFC", "#F2D946", "#F09135", "#E94125"]);
-
+      console.log(tempColorScale.quantiles())
       function drawLegend(legend, legendColorScale) {
 
         const legendWidth = legend.attr("width");
@@ -333,11 +333,74 @@
       // console.log(list1);
       // END TOP 5 LIST
 
+     
+      // map.on("mouseover", function (d) {
+      //   mouseover.attr("visibility", "");
+      //   updateWines(list1[d3.select(this)]);
+      // });
+
+      // map.on("mouseout", function (d) {
+      //   mouseover.attr("visibility", "hidden");
+      // })
+
+      // ---------------------- Part 2 -----------------------------------------
+      const svg2 = d3.select("svg#barchart");
+      const width2 = svg2.attr("width");
+      const height2 = svg2.attr("height");
+      const margin2 = { top: 10, right: 10, bottom: 50, left: 50 };
+      const chartWidth = width2 - margin2.left - margin2.right;
+      const chartHeight = height2 - margin2.top - margin2.bottom;
+
+      let annotations = svg2.append("g").attr("id", "annotations");
+      // console.log(annotations)
+      let chartArea = svg2.append("g").attr("id", "points")
+        .attr("transform", `translate(${margin2.left + 25},${margin2.top})`);
+
+      const data = await d3.csv("wines_cleaned.csv");
+      // console.log(data);
+
+
+      // clean data
+      data.forEach((d, i) => {
+        d['points'] = Number(d['points']);
+        d['price'] = Number(d['price']);
+      });
+      var relevantStates = ["California", "Washington", "Oregon", "New York", "Virginia"];
+      var wines = data.filter(function (d) { return (d.price != 0 && relevantStates.includes(d.province)) });
+
+      // part 1: quanlity
+      let quanlity = [];
+      data.forEach(d => {
+        if (d.points > 79) {
+          quanlity.push({ 'state': d.province, 'quality': d.points, 'wine': d.title })
+        }
+      });
+      quanlity.sort((a, b) => d3.descending(a['quality'], b['quality']));
+      // console.log(quanlity);
+
+      let quanlityCount = [];
+      for (let i = 0; i < weather.length; i++) {
+        let count = 0;
+        for (let j = 0; j < quanlity.length; j++) {
+          if (weather[i].State == quanlity[j].state) {
+            count++;
+          }
+        }
+        quanlityCount.push({ 'state': weather[i].State, 'count': count });
+      }
+      // console.log(quanlityCount);
+
+      let count = {};
+      quanlityCount.forEach(d => {
+        count[d.state] = d.count
+      })
+      // console.log(count);
+
       map.selectAll("path.state").data(states.features)
         .join("path")
         .attr("class", "state")
         .attr("d", path)
-        .attr("fill", d => tempColorScale(d.properties.avgTmp))
+        .attr("fill", d => count[d.properties.name] !== 0 ? tempColorScale(d.properties.avgTmp) : 'lightgrey')
         .attr("stateName", d => d.properties.name)
         .on('mouseover', mouseEntersPlot)
         .on('mouseout', mouseLeavesPlot);
@@ -349,11 +412,6 @@
         .style("stroke", "black")
         .style("stroke-width", 0.5)
         .attr("d", path);
-
-      const stateSet = new Set(states.features.map(d => d.properties.name))
-      const weatherSet = new Set(Object.values(stateNames))
-      // console.log([...stateSet].filter(s => !weatherSet.has(s)))
-      // console.log(stateTemp);
 
       // hover and show information
       let tooltipWidth = 200;
@@ -394,70 +452,6 @@
         .attr("y", 52);
 
 
-
-      d3.selectAll(".state").on("mouseenter", mouseEntersPlot);
-      d3.selectAll(".state").on("mouseout", mouseLeavesPlot);
-      // map.on("mouseover", function (d) {
-      //   mouseover.attr("visibility", "");
-      //   updateWines(list1[d3.select(this)]);
-      // });
-
-      // map.on("mouseout", function (d) {
-      //   mouseover.attr("visibility", "hidden");
-      // })
-
-      // ---------------------- Part 2 -----------------------------------------
-      const svg2 = d3.select("svg#barchart");
-      const width2 = svg2.attr("width");
-      const height2 = svg2.attr("height");
-      const margin2 = { top: 10, right: 10, bottom: 50, left: 50 };
-      const chartWidth = width2 - margin2.left - margin2.right;
-      const chartHeight = height2 - margin2.top - margin2.bottom;
-
-      let annotations = svg2.append("g").attr("id", "annotations");
-      // console.log(annotations)
-      let chartArea = svg2.append("g").attr("id", "points")
-        .attr("transform", `translate(${margin2.left + 25},${margin2.top})`);
-
-      const data = await d3.csv("wines_cleaned.csv");
-      // console.log(data);
-
-
-      // clean data
-      data.forEach((d, i) => {
-        d['points'] = Number(d['points']);
-        d['price'] = Number(d['price']);
-      });
-      var states = ["California", "Washington", "Oregon", "New York", "Virginia"];
-      var wines = data.filter(function (d) { return (d.price != 0 && states.includes(d.province)) });
-
-      // part 1: quanlity
-      let quanlity = [];
-      data.forEach(d => {
-        if (d.points > 79) {
-          quanlity.push({ 'state': d.province, 'quality': d.points, 'wine': d.title })
-        }
-      });
-      quanlity.sort((a, b) => d3.descending(a['quality'], b['quality']));
-      // console.log(quanlity);
-
-      let quanlityCount = [];
-      for (let i = 0; i < weather.length; i++) {
-        let count = 0;
-        for (let j = 0; j < quanlity.length; j++) {
-          if (weather[i].State == quanlity[j].state) {
-            count++;
-          }
-        }
-        quanlityCount.push({ 'state': weather[i].State, 'count': count });
-      }
-      // console.log(quanlityCount);
-
-      let count = {};
-      quanlityCount.forEach(d => {
-        count[d.state] = d.count
-      })
-      // console.log(count);
 
       let winelist = [];
       let content = {};
@@ -607,7 +601,7 @@
         .attr("class", "x axis")
         .attr("transform", `translate(${margin2.left - 10},${chartHeight + margin2.top + 10})`)
 
-      const stateScale = d3.scaleBand().domain(states).range([0, chartWidth])
+      const stateScale = d3.scaleBand().domain(relevantStates).range([0, chartWidth])
         .padding(0.05);
 
       bottomAxis.scale(stateScale)
