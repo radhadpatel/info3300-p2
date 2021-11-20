@@ -161,7 +161,6 @@
         <text>List of Top 5 Wines</text> <br>
         <text class="note">(hover over the state to view the list)</text> <br>
       </p>
-      <!-- x=760, y=140 -->
       <text id="wine1" x="0" y="50" text-anchor="start" alignment-baseline="hanging"></text><br>
       <br>
       <text id="wine2" x="0" y="80" text-anchor="start" alignment-baseline="hanging"></text> <br>
@@ -215,6 +214,7 @@
     </div>
   </div>
 
+  <!--Slider for scatterplot-->
   <div>
     <div class="slidecontainer">
       <p class="note">(Please use the slider to see wines in the specific price)</p>
@@ -226,6 +226,7 @@
 
   <script id="p2">
 
+    // Map setup
     const svg = d3.select("svg#choropleth");
     const width = svg.attr("width");
     const height = svg.attr("height");
@@ -235,57 +236,34 @@
     const map = svg.append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    // const mouseover = svg.append("g").attr("class", "mouseover");
-    // const textbox = mouseover.append("g")
-    //   .attr("class", "float-child-right1");
-
-    // function updateWines(top_wines) {
-    //   textbox.html("");
-
-    //   let x = 700;
-    //   let y = 100;
-    //   top_wines.forEach((d, i) => {
-    //     textbox.append("text")
-    //       .text(d)
-    //       .attr("x", x)
-    //       .attr("y", y);
-
-    //     y = y + 50;
-    //   });
-
-    // }
 
     const requestData = async function () {
       const us = await d3.json("states-10m.json");
-      // console.log(us)
 
 
+      // Add state lines
       var states = topojson.feature(us, us.objects.states);
       var statesMesh = topojson.mesh(us, us.objects.states);
       var projection = d3.geoAlbersUsa().fitSize([mapWidth, mapHeight], states);
       var path = d3.geoPath().projection(projection);
-      // console.log(states.features);
 
       var weather = await d3.csv("weather.csv", d3.autotype);
-      // console.log(weather);
 
       let stateTemp = {};
       let stateNames = {};
 
       weather.forEach(d => {
-        // console.log(d);
         stateTemp[d.State] = d.AvgF;
         stateNames[d.id] = d.State;
       })
 
-
+      // Color scale based on weather
       const tempExtend = weather.map(d => d['AvgF']);
-      // console.log(tempExtend);
       const tempColorScale = d3.scaleQuantile()
         .domain(tempExtend)
         .range(["#A3EDFC", "#F2D946", "#F09135", "#E94125"]);
-      console.log(tempColorScale.quantiles())
 
+      // Draw color scale legend
       function drawLegend(legend, legendColorScale) {
 
         const legendWidth = legend.attr("width") - 250;
@@ -340,12 +318,10 @@
         bar.append("line").attr("stroke", "white").attr("stroke-width", 3).attr("x1", barScale(legendMinMax[1])).attr("x2", barScale(legendMinMax[1])).attr("y1", 0).attr("y1", barHeight + 4);
       }
 
-      // const colorLegend = d3.select("#colorLegend");
-      // const colorHeight = colorLegend.attr("height") - 20;
-      // const legend = svg.append("g")
-      // .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
       drawLegend(d3.select("#colorLegend"), tempColorScale);
+
+      // Add label to color scale
       let label = d3.select("#colorLegend").append("g")
         .attr("class", "legendlabel");
       label.append("text").attr("transform", "translate(" + (400) + "," + (60) + ")").text("+++");
@@ -354,69 +330,8 @@
 
       states.features.forEach(s => s.properties.avgTmp = stateTemp.hasOwnProperty(s.properties.name) ? stateTemp[s.properties.name] : 0)
 
-      let winesData = await d3.csv("wines_cleaned.csv");
-      // LIST OF TOP 5 WINES PER STATE
-      let quality = [];
-      winesData.forEach(d => {
-        if (d.points > 79) {
-          quality.push({ 'state': d.province, 'quality': d.points, 'wine': d.title })
-        }
-      });
-      quality.sort((a, b) => d3.descending(a['quality'], b['quality']));
-      // console.log(quality);
-
-      let qualityCount = [];
-      for (let i = 0; i < weather.length; i++) {
-        let count1 = 0;
-        for (let j = 0; j < quality.length; j++) {
-          if (weather[i].State == quality[j].state) {
-            count1++;
-          }
-        }
-        qualityCount.push({ 'state': weather[i].State, 'count': count1 });
-      }
-      // console.log(qualityCount);
-
-      let count2 = {};
-      qualityCount.forEach(d => {
-        count2[d.state] = d.count2
-      })
-      // console.log(count2);
-
-      let winelist1 = [];
-      let content1 = {};
-      for (let i = 0; i < weather.length; i++) {
-        let check1 = 0;
-        content1 = {};
-        for (let j = 0; j < quality.length; j++) {
-          if (weather[i].State == quality[j].state && check1 < 5) {
-            check1++;
-            content1[check1] = quality[j].wine;
-            // console.log(content1)
-          }
-        }
-        winelist1.push({ 'state': weather[i].State, 'list': content1 });
-      }
-      // console.log(winelist1);
-
-      let list1 = {};
-      winelist1.forEach(d => {
-        list1[d.state] = d.list;
-      })
-      // console.log(list1);
-      // END TOP 5 LIST
-
-
-      // map.on("mouseover", function (d) {
-      //   mouseover.attr("visibility", "");
-      //   updateWines(list1[d3.select(this)]);
-      // });
-
-      // map.on("mouseout", function (d) {
-      //   mouseover.attr("visibility", "hidden");
-      // })
-
       // ---------------------- Part 2 -----------------------------------------
+      // Set up for scatterplot
       const svg2 = d3.select("svg#barchart");
       const width2 = svg2.attr("width");
       const height2 = svg2.attr("height");
@@ -425,13 +340,10 @@
       const chartHeight = height2 - margin2.top - margin2.bottom;
 
       let annotations = svg2.append("g").attr("id", "annotations");
-      // console.log(annotations)
       let chartArea = svg2.append("g").attr("id", "points")
         .attr("transform", `translate(${margin2.left + 25},${margin2.top})`);
 
       const data = await d3.csv("filtered_wines.csv");
-      // console.log(data);
-
 
       // clean data
       data.forEach((d, i) => {
@@ -449,7 +361,6 @@
         }
       });
       quanlity.sort((a, b) => d3.descending(a['quality'], b['quality']));
-      // console.log(quanlity);
 
       let quanlityCount = [];
       for (let i = 0; i < weather.length; i++) {
@@ -461,7 +372,6 @@
         }
         quanlityCount.push({ 'state': weather[i].State, 'count': count });
       }
-      // console.log(quanlityCount);
 
       let count = {};
       let total = 0;
@@ -469,7 +379,6 @@
         count[d.state] = d.count
         total += d.count
       })
-      // console.log(count);
 
       map.selectAll("path.state").data(states.features)
         .join("path")
@@ -480,7 +389,6 @@
           h = hsl.h;
           s = hsl.s;
           l = hsl.l * (1 + (-count[d.properties.name] / (total - 100))) * 0.8;
-          // console.log(d3.hsl(h, s, l, 1));
           if (count[d.properties.name] !== 0) {
             return d3.hsl(h, s, l, 1);
           }
@@ -555,24 +463,22 @@
           if (weather[i].State == quanlity[j].state && check < 5) {
             check++;
             content[check] = quanlity[j].wine;
-            // console.log(content)
           }
         }
         winelist.push({ 'state': weather[i].State, 'list': content });
       }
-      // console.log(winelist);
 
       let list = {};
       winelist.forEach(d => {
         list[d.state] = d.list;
       })
-      // console.log(list);
 
 
-
+      // Create mouseover for top 5 list
       const mouseover = svg.append("g").attr("class", "mouseover")
         .attr("transform", "translate(750, 100)");
 
+      // Create frame for top 5 list
       const frame = mouseover.append("rect")
         .attr("class", "frame")
         .attr("x", 0)
@@ -581,10 +487,8 @@
         .attr("ry", 5)
         .attr("width", 400)
         .attr("height", 300);
-      // .attr("fill", "white")
-      // .attr("stroke", "#222")
-      // .attr("stroke-width", "2px");
 
+      // Textbox for top 5 list
       const textbox = mouseover.append("g")
         .attr("class", "textbox")
         .attr("transform", "translate(10,10)");
@@ -595,11 +499,6 @@
         .attr("x", 880)
         .attr("y", 125);
 
-      // textbox.append("text")
-      //   .text("Top 5 Wines")
-      //   .attr("font-size", "20px")
-      //   .attr("x", 0)
-      //   .attr("y", 0);
 
       const format = d3.format(",d");
 
@@ -624,20 +523,11 @@
         momesh.datum(mo).attr("d", path);
 
         let wineName = list[state.attr("stateName")];
-        // console.log(typeof (wineName[1]));
-        if (wineName[1] === undefined) {
-          // textbox.append("text")
-          //   .text("No wines for this state")
-          //   .attr("x", 0)
-          //   .attr("y", 40);
 
+        if (wineName[1] === undefined) {
           d3.select('#wine1').text("No wines for this state");
         }
         else {
-          // textbox.append("text")
-          //   .text("1.  " + wineName[1])
-          //   .attr("x", 0)
-          //   .attr("y", 40);
           d3.select('#wine1').text("1.  " + wineName[1]);
         }
 
@@ -657,39 +547,15 @@
         if (wineName[5] != undefined) {
           text5 = "5.  " + wineName[5];
         }
-        // textbox.append("text")
-        //   .text(text2)
-        //   .attr("x", 0)
-        //   .attr("y", 60);
         d3.select('#wine2').text(text2);
-        // textbox.append("text")
-        //   .text(text3)
-        //   .attr("x", 0)
-        //   .attr("y", 80);
         d3.select('#wine3').text(text3);
-        // textbox.append("text")
-        //   .text(text4)
-        //   .attr("x", 0)
-        //   .attr("y", 100);
         d3.select('#wine4').text(text4);
-        // textbox.append("text")
-        //   .text(text5)
-        //   .attr("x", 0)
-        //   .attr("y", 120);
         d3.select('#wine5').text(text5);
-
-
-        // var list = function(wineName) {
-        //   for (var prop in wineName) {
-        //     document.getElementById('wine1').innerHTML += '<li>' + prop + '</li>';
-        //     console.log(prop);
-        //   }
-        // }
 
       }
 
+      // Mouseout
       function mouseLeavesPlot() {
-        // textbox.html("");
         d3.select('#wine1').text("");
         d3.select('#wine2').text("");
         d3.select('#wine3').text("");
@@ -699,13 +565,6 @@
         tooltip.style("visibility", "hidden");
         let state = d3.select(this);
         momesh.attr("d", "");
-
-        // d3.select('#wine1').text("");
-        // d3.select('#wine2').text("");
-        // d3.select('#wine3').text("");
-        // d3.select('#wine4').text("");
-        // d3.select('#wine5').text("");
-        // frame.style("visibility", "hidden");
       }
       // end of part 1
 
@@ -831,7 +690,7 @@
 
       // Update the current slider value (each time you drag the slider handle)
       slider.oninput = function () {
-        output.innerHTML = this.value;
+        output.innerHTML = "$" + this.value;
       }
 
       d3.select("#myRange").on("change", function () {
