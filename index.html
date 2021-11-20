@@ -153,7 +153,7 @@
     <div class="float-child-left1">
       <svg id="choropleth" height="550" width="800" style="margin-left:100px"></svg>
       <p id="legendLabel">Temperature in Fahrenheit</p>
-      <svg id="colorLegend" height="100" width="400" style="background: #fff; margin-left:100px"></svg>
+      <svg id="colorLegend" height="100" width="650" style="background: #fff; margin-left:100px"></svg>
     </div>
 
     <div class="float-child-right1">
@@ -283,12 +283,12 @@
       // console.log(tempExtend);
       const tempColorScale = d3.scaleQuantile()
         .domain(tempExtend)
-        .range(["#37ABF8", "#A3EDFC", "#F2D946", "#F09135", "#E94125"]);
+        .range(["#A3EDFC", "#F2D946", "#F09135", "#E94125"]);
       console.log(tempColorScale.quantiles())
 
       function drawLegend(legend, legendColorScale) {
 
-        const legendWidth = legend.attr("width");
+        const legendWidth = legend.attr("width") - 250;
         const legendHeight = legend.attr("height");
         const legendMinMax = d3.extent(legendColorScale.domain());
         const barHeight = 60;
@@ -313,58 +313,29 @@
             .style("fill", legendColorScale(pixelScale(i)));
           bar.append("rect")
             .attr("x", i)
-            .attr("y", 4 * barHeight / 5)
+            .attr("y", 2 * barHeight / 3)
             .attr("width", stepSize)
-            .attr("height", barHeight / 5)
+            .attr("height", barHeight / 3)
             .style("fill", function (d) {
               hsl = d3.hsl(legendColorScale(pixelScale(i)));
               h = hsl.h;
               s = hsl.s;
               l = hsl.l * 0.3;
-              console.log(d3.hsl(h, s, l, 1));
               return d3.hsl(h, s, l, 1);
             });
           bar.append("rect")
             .attr("x", i)
-            .attr("y", 3 * barHeight / 5)
+            .attr("y", 1 * barHeight / 3)
             .attr("width", stepSize)
-            .attr("height", barHeight / 5)
-            .style("fill", function (d) {
-              hsl = d3.hsl(legendColorScale(pixelScale(i)));
-              h = hsl.h;
-              s = hsl.s;
-              l = hsl.l * 0.4;
-              console.log(d3.hsl(h, s, l, 1));
-              return d3.hsl(h, s, l, 1);
-            });
-          bar.append("rect")
-            .attr("x", i)
-            .attr("y", 2 * barHeight / 5)
-            .attr("width", stepSize)
-            .attr("height", barHeight / 5)
+            .attr("height", barHeight / 3)
             .style("fill", function (d) {
               hsl = d3.hsl(legendColorScale(pixelScale(i)));
               h = hsl.h;
               s = hsl.s;
               l = hsl.l * 0.6;
-              console.log(d3.hsl(h, s, l, 1));
-              return d3.hsl(h, s, l, 1);
-            });
-          bar.append("rect")
-            .attr("x", i)
-            .attr("y", barHeight / 5)
-            .attr("width", stepSize)
-            .attr("height", barHeight / 5)
-            .style("fill", function (d) {
-              hsl = d3.hsl(legendColorScale(pixelScale(i)));
-              h = hsl.h;
-              s = hsl.s;
-              l = hsl.l * 0.8;
-              console.log(d3.hsl(h, s, l, 1));
               return d3.hsl(h, s, l, 1);
             });
         }
-        legend.append("text").attr("x", 0).attr("y", legendWidth).text("High # Quality Scores")
         bar.append("line").attr("stroke", "white").attr("stroke-width", 3).attr("x1", barScale(legendMinMax[0])).attr("x2", barScale(legendMinMax[0])).attr("y1", 0).attr("y1", barHeight + 4);
         bar.append("line").attr("stroke", "white").attr("stroke-width", 3).attr("x1", barScale(legendMinMax[1])).attr("x2", barScale(legendMinMax[1])).attr("y1", 0).attr("y1", barHeight + 4);
       }
@@ -375,6 +346,11 @@
       // .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
       drawLegend(d3.select("#colorLegend"), tempColorScale);
+      let label = d3.select("#colorLegend").append("g")
+        .attr("class", "legendlabel");
+      label.append("text").attr("transform", "translate(" + (400) + "," + (60) + ")").text("+++");
+      label.append("text").attr("transform", "translate(" + (400) + "," + (40) + ")").text("++ Quality Scores > 80");
+      label.append("text").attr("transform", "translate(" + (400) + "," + (20) + ")").text("+");
 
       states.features.forEach(s => s.properties.avgTmp = stateTemp.hasOwnProperty(s.properties.name) ? stateTemp[s.properties.name] : 0)
 
@@ -503,8 +479,8 @@
           hsl = d3.hsl(tempColorScale(d.properties.avgTmp));
           h = hsl.h;
           s = hsl.s;
-          l = hsl.l * (1 + (-count[d.properties.name] / (total - 100)));
-          console.log(d3.hsl(h, s, l, 1));
+          l = hsl.l * (1 + (-count[d.properties.name] / (total - 100))) * 0.8;
+          // console.log(d3.hsl(h, s, l, 1));
           if (count[d.properties.name] !== 0) {
             return d3.hsl(h, s, l, 1);
           }
